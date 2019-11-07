@@ -79,20 +79,20 @@ func resourcePksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				//ValidateFunc: validation.StringInSlice([]string{"CREATE", "UPDATE", "DELETE"}, true),
-				Description: "Unique ID for the cluster, use this to lookup the cluster with BOSH",
+				Description: "Last action performed on the cluster through PKS, one of CREATE, UPDATE, DELETE",
 			},
 
 			"last_action_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 				//ValidateFunc: validation.StringInSlice([]string{"in progress", "succeeded", "failed"}, true),
-				Description: "Unique ID for the cluster, use this to lookup the cluster with BOSH",
+				Description: "One of: in progress, succeeded, failed",
 			},
 
 			"last_action_description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Unique ID for the cluster, use this to lookup the cluster with BOSH",
+				Description: "",
 			},
 		},
 	}
