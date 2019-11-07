@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 type Token struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -104,7 +103,6 @@ func GetCluster(client *Client, clusterName string) (*ClusterResponse, bool, err
 	}
 	return &cr, true, nil
 }
-
 
 func CreateCluster(client *Client, clusterReq ClusterRequest) error {
 	b := new(bytes.Buffer)

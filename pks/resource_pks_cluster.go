@@ -180,5 +180,3 @@ func resourcePksClusterDelete(d *schema.ResourceData, m interface{}) error {
 
 	return nil
 }
-
-
