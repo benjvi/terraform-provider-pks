@@ -1,11 +1,11 @@
 package pks
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -155,19 +155,9 @@ func testAccCheckPksClusterExists(resourceName, clusterName string) resource.Tes
 		}
 
 		client := testAccProvider.Meta().(*Client)
-		req, _ := http.NewRequest("GET", "https://"+client.target+":9021/v1/clusters/"+rs.Primary.ID, nil)
-		req.Header["Authorization"] = []string{"Bearer " + client.token}
-		req.Header["Accept"] = []string{"application/json; charset=utf-8"}
-		resp, err := client.httpClient.Do(req)
+		cr, _, err := getCluster(client, clusterName)
 		if err != nil {
-			return fmt.Errorf("error reading cluster from PKS API %q: %q", req.URL.String(), err.Error())
-		}
-		defer resp.Body.Close()
-
-		var cr ClusterResponse
-		err = json.NewDecoder(resp.Body).Decode(&cr)
-		if err != nil {
-			return fmt.Errorf("error parsing cluster response from PKS API %q: %q", req.URL.String(), err.Error())
+			return err
 		}
 
 		if cr.Name != clusterName {
@@ -190,18 +180,18 @@ func testAccCheckPksClusterDestroy(s *terraform.State) error {
 		req.Header["Authorization"] = []string{"Bearer " + client.token}
 		req.Header["Accept"] = []string{"application/json; charset=utf-8"}
 		resp, err := client.httpClient.Do(req)
-		if err == nil {
-			var cr ClusterResponse
-			err = json.NewDecoder(resp.Body).Decode(&cr)
-			if err != nil {
-				return fmt.Errorf("error parsing cluster response from PKS API %q: %q", req.URL.String(), err.Error())
-			}
-
-			return fmt.Errorf("Cluster %q still exists: %#v", rs.Primary.ID, cr)
+		if err != nil {
+			return fmt.Errorf("Error checking cluster %q is destroyed: %q", rs.Primary.ID, err.Error())
 		}
-		resp.Body.Close()
+		if resp.StatusCode == 404 {
+			resp.Body.Close()
+			return nil
+		} else {
+			body, _ := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+			return fmt.Errorf("unexpected response %q after cluster %q destruction: %q", resp.Status, rs.Primary.ID, body)
+		}
 	}
-
 	return nil
 }
 
@@ -215,15 +205,15 @@ func testAccManuallyDeletePksCluster(resourceName, clusterName string, initialUu
 		initialUuid = &uuid
 
 		client := testAccProvider.Meta().(*Client)
-		req, _ := http.NewRequest("DELETE", "https://"+client.target+":9021/v1/clusters/"+clusterName, nil)
-		req.Header["Authorization"] = []string{"Bearer " + client.token}
-		req.Header["Accept"] = []string{"application/json; charset=utf-8"}
-
-		resp, err := client.httpClient.Do(req)
+		err := deleteCluster(client, clusterName)
 		if err != nil {
-			return fmt.Errorf("error deleting cluster from PKS API %q: %q", req.URL.String(), err.Error())
+			return err
 		}
-		defer resp.Body.Close()
+
+		err = waitForClusterAction(client, clusterName, "DELETE")
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}

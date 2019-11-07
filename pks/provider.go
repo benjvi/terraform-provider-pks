@@ -78,7 +78,7 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"pks_cluster": resourcePksTile(),
+			"pks_cluster": resourcePksCluster(),
 			/* TODO
 			"pks_network_profile": resourcePcfTile(),
 			"pks_network_profile": resourcePcfTile(),
