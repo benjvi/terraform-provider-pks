@@ -7,11 +7,12 @@ require (
 	cloud.google.com/go/storage v1.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.25.27 // indirect
 	github.com/benjvi/terraform-provider-pcf-ops-manager v0.0.0-20191105134351-51423be6aa97
+	github.com/bflad/tfproviderlint v0.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
+	github.com/golangci/golangci-lint v1.21.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-hclog v0.10.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hil v0.0.0-20190212132231-97b3a9cdfa93 // indirect
 	github.com/hashicorp/terraform v0.12.13
 	github.com/hashicorp/terraform-plugin-sdk v1.2.0
