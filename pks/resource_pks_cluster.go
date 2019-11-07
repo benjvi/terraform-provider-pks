@@ -106,7 +106,6 @@ func resourcePksClusterCreate(d *schema.ResourceData, m interface{}) error {
 
 	params := ClusterParameters{
 		KubernetesMasterHost: d.Get("external_hostname").(string),
-		KubernetesMasterPort: 8443,
 	}
 	if workers, ok := d.GetOk("num_nodes"); ok {
 		params.KubernetesWorkerInstances = int64(workers.(int))
@@ -210,8 +209,8 @@ type ClusterRequest struct {
 
 type ClusterParameters struct {
 	KubernetesMasterHost      string `json:"kubernetes_master_host"`
-	KubernetesMasterPort      int64  `json:"kubernetes_master_port"`
-	KubernetesWorkerInstances int64  `json:"kubernetes_worker_instances"`
+	KubernetesMasterPort      int64  `json:"kubernetes_master_port,omitempty"`
+	KubernetesWorkerInstances int64  `json:"kubernetes_worker_instances,omitempty"`
 }
 
 type ClusterResponse struct {

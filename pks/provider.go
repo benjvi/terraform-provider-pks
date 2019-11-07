@@ -66,15 +66,15 @@ func Provider() terraform.ResourceProvider {
 			"max_wait_min": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     10,
 				Description: "Max length of time (in minutes) the provider will wait for async operations - like cluster creation - to finish",
+				DefaultFunc: schema.EnvDefaultFunc("PKS_MAX_WAIT_MIN", 20),
 			},
 
 			"wait_poll_interval_sec": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     10,
 				Description: "Frequency of polling (in seconds) while waiting for async operations like cluster creation",
+				DefaultFunc: schema.EnvDefaultFunc("PKS_WAIT_POLL_INTERVAL_SEC", 10),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
