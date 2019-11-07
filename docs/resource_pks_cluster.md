@@ -9,7 +9,7 @@ This resource waits for any actions taken on the cluster to be completed, allowi
 ```hcl
 resource "pks_cluster" "example" {
   name = "example1"
-  external_hostname = "${var.k8s_api_dns_name}"
+  external_hostname = "example1-api.example.com"
   plan = "small"
   num_nodes = 1
 }
@@ -38,7 +38,7 @@ The following attributes are exported:
 
 ## Import
 
-Use the cluster name to import, e.g.
+Use the cluster name to import an existing cluster, e.g.
 
 ```
 $ terraform import pks_cluster.example example_cluster_name
