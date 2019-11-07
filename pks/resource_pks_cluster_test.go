@@ -155,7 +155,7 @@ func testAccCheckPksClusterExists(resourceName, clusterName string) resource.Tes
 		}
 
 		client := testAccProvider.Meta().(*Client)
-		cr, _, err := getCluster(client, clusterName)
+		cr, _, err := GetCluster(client, clusterName)
 		if err != nil {
 			return err
 		}
@@ -176,7 +176,7 @@ func testAccCheckPksClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		req, _ := http.NewRequest("GET", "https://"+client.target+":9021/v1/clusters/"+rs.Primary.ID, nil)
+		req, _ := http.NewRequest("GET", "https://"+client.hostname+":9021/v1/clusters/"+rs.Primary.ID, nil)
 		req.Header["Authorization"] = []string{"Bearer " + client.token}
 		req.Header["Accept"] = []string{"application/json; charset=utf-8"}
 		resp, err := client.httpClient.Do(req)
@@ -205,12 +205,12 @@ func testAccManuallyDeletePksCluster(resourceName, clusterName string, initialUu
 		initialUuid = &uuid
 
 		client := testAccProvider.Meta().(*Client)
-		err := deleteCluster(client, clusterName)
+		err := DeleteCluster(client, clusterName)
 		if err != nil {
 			return err
 		}
 
-		err = waitForClusterAction(client, clusterName, "DELETE")
+		err = WaitForClusterAction(client, clusterName, "DELETE")
 		if err != nil {
 			return err
 		}

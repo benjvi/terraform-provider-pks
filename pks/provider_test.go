@@ -31,12 +31,8 @@ func TestProvider_impl(t *testing.T) {
 type preCheckFunc = func(*testing.T)
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("PKS_TARGET"); v == "" {
-		t.Fatal("PKS_TARGET must be set for acceptance tests")
-	}
-
-	if v := os.Getenv("PKS_TOKEN"); v == "" {
-		t.Fatal("PKS_TOKEN must be set for acceptance tests")
+	if v := os.Getenv("PKS_HOSTNAME"); v == "" {
+		t.Fatal("PKS_HOSTNAME must be set for acceptance tests")
 	}
 }
 

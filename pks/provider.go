@@ -2,6 +2,7 @@ package pks
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,40 +11,42 @@ import (
 )
 
 type Client struct {
-	target, token, clientId, clientSecret, username, password string
-	skipSslValidation                                         bool
-	httpClient                                                *http.Client
-	maxWaitMin, waitPollIntervalSec                           int64
+	hostname, token, clientId, clientSecret, username, password string
+	httpClient                                                  *http.Client
+	maxWaitMin, waitPollIntervalSec                             int64
 }
 
 func Provider() terraform.ResourceProvider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"target": {
+			"hostname": {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("PKS_TARGET", nil),
+				DefaultFunc: schema.EnvDefaultFunc("PKS_HOSTNAME", nil),
 			},
 
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
-				//ConflictsWith: []string{"username", "password", "client_id", "client_secret"},
-				DefaultFunc: schema.EnvDefaultFunc("PKS_TOKEN", nil),
-				Description: "Use generated token from UAA in lieu of normal auth",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"client_id", "client_secret"},
+				DefaultFunc:   schema.EnvDefaultFunc("PKS_TOKEN", nil),
+				Description:   "Use generated token from UAA in lieu of normal auth",
 			},
 
-			"client_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				ConflictsWith: []string{"username", "password", "token"},
+			"client_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"token"},
+				DefaultFunc:   schema.EnvDefaultFunc("PKS_CLIENT_ID", nil),
 			},
 
-			"client_secret": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				ConflictsWith: []string{"username", "password", "token"},
+			"client_secret": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"token"},
+				DefaultFunc:   schema.EnvDefaultFunc("PKS_CLIENT_SECRET", nil),
 			},
+
 			/* TODO (check whats the supported service client auth flow for pks api
 			"username": &schema.Schema{
 				Type:        schema.TypeString,
@@ -100,13 +103,33 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	} else {
 		c.Transport = logging.NewTransport("pks", c.Transport)
 	}
+
+	hostname := d.Get("hostname").(string)
+
+	// make sure we have a token via one of the auth methods
+	clientId, clientIdOk := d.GetOk("client_id")
+	clientSecret, clientSecretOk := d.GetOk("client_secret")
+	token, tokenOk := d.GetOk("token")
+	var clientToken string
+	var err error
+	if clientIdOk && clientSecretOk {
+		clientToken, err = ClientLogin(c, hostname, clientId.(string), clientSecret.(string))
+		if err != nil {
+			return nil, err
+		}
+	} else if tokenOk {
+		clientToken = token.(string)
+	} else {
+		return nil, fmt.Errorf("no valid combination of auth attributes found, set `token` OR both `client_id` and `client_secret`")
+	}
+
 	om := &Client{
-		target:              d.Get("target").(string),
-		token:               d.Get("token").(string),
-		skipSslValidation:   d.Get("skip_ssl_validation").(bool),
+		hostname:            hostname,
+		token:               clientToken,
 		httpClient:          c,
 		maxWaitMin:          int64(d.Get("max_wait_min").(int)),
 		waitPollIntervalSec: int64(d.Get("wait_poll_interval_sec").(int)),
 	}
+
 	return om, nil
 }

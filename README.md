@@ -3,7 +3,8 @@ Terraform Provider
 
 It's a Terraform provider for PKS. At the moment the only completed resource is the `pks_cluster` resource for creating clusters.
 
-Note that this is not an officially supported provider. However, if you encounter any issues you are welcome to raise an issue on this repo.
+Note that this is not an officially supported provider. Nor does the PKS HTTP API offer any direct guarantees to maintaining compatibility over upgrades. 
+However, if you encounter any issues you are welcome to raise an issue on this repo.
 
 - Website: https://www.terraform.io
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
