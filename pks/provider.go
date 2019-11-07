@@ -32,7 +32,7 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("PKS_TOKEN", nil),
 				Description: "Use generated token from UAA in lieu of normal auth",
 			},
-			/* TODO (check whats the supported service client auth flow for pks api
+
 			"client_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -44,7 +44,7 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				ConflictsWith: []string{"username", "password", "token"},
 			},
-
+			/* TODO (check whats the supported service client auth flow for pks api
 			"username": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -80,8 +80,8 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"pks_cluster": resourcePksCluster(),
 			/* TODO
-			"pks_network_profile": resourcePcfTile(),
-			"pks_network_profile": resourcePcfTile(),
+			"pks_network_profile": resourcePksNetworkProfile(),
+			"pks_sink": resourcePksSink(),
 			*/
 		},
 		ConfigureFunc: providerConfigure,
