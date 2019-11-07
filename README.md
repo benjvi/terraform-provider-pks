@@ -1,9 +1,9 @@
 Terraform Provider
 ==================
 
-It's a terraform provider for PKS. At the moment the only completed resource is the `pks_cluster` resource for creating clusters.
+It's a Terraform provider for PKS. At the moment the only completed resource is the `pks_cluster` resource for creating clusters.
 
-Note, that this is not an officially supported provider. If you do encounter any issues raise an issue.
+Note that this is not an officially supported provider. However, if you encounter any issues you are welcome to raise an issue on this repo.
 
 - Website: https://www.terraform.io
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
@@ -58,8 +58,8 @@ Configuration Options
 ----------------------
 
 Configuration options can be found :
-* [here](/docs/provider_configuration.md) for the provider itself
-* [here](/docs/resource_pks_cluster.md)for the `pks_cluster` resource
+* [Here](/docs/provider_configuration.md) for the provider itself
+* [Here](/docs/resource_pks_cluster.md) for the `pks_cluster` resource
 
 Developing the Provider
 ---------------------
@@ -106,4 +106,7 @@ Contributing
 ---------------------------
 
 Issues on GitHub are intended to be related to bugs or feature requests with provider codebase. See https://www.terraform.io/docs/extend/community/index.html for a list of community resources to ask questions about Terraform.
+
+~~~
+
 ~~~
