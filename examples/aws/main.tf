@@ -8,7 +8,7 @@ resource "pks_cluster" "example" {
   name = var.cluster_name
   external_hostname = "${var.cluster_name}.${var.k8s_api_dns_suffix}"
   plan = "small"
-  num_nodes = 1
+  num_nodes = 2
 }
 
 resource "aws_lb" "k8s_api" {
@@ -16,7 +16,7 @@ resource "aws_lb" "k8s_api" {
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = true
   internal                         = false
-  subnets                          = ["${var.public_subnet_ids}"]
+  subnets                          = "${var.public_subnet_ids}"
 }
 
 resource "aws_lb_listener" "k8s_api_8443" {
@@ -34,22 +34,23 @@ resource "aws_lb_target_group" "k8s_api_8443" {
   name     = "${pks_cluster.example.name}-k8s-tg-8443"
   port     = 8443
   protocol = "TCP"
-  vpc_id   = "${var.vpc_id}"
+  vpc_id   = var.vpc_id
   target_type = "ip"
 }
 
 resource "aws_lb_target_group_attachment" "k8s_api_nodes" {
-  for_each = pks_cluster.example.master_ips
-  target_group_arn = "${aws_lb_target_group.k8s_api_8443.arn}"
-  target_id        = each.value
-  port             = 80
+  count = 1
+  target_group_arn = aws_lb_target_group.k8s_api_8443.arn
+  target_id        = "${pks_cluster.example.master_ips[0]}"
+  port             = 8443
 }
 
 resource "aws_route53_record" "api" {
-  zone_id = "${var.zone_id}"
-  name = "${pks_cluster.example.external_hostname}"
-  value = "${aws_lb.k8s_api.dns_name}"
+  zone_id = var.zone_id
+  name = pks_cluster.example.external_hostname
+  records = ["${aws_lb.k8s_api.dns_name}"]
   type = "CNAME"
+  ttl = "300"
 }
 
 variable "cluster_name" {
