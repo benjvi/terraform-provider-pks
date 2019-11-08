@@ -265,8 +265,13 @@ func testAccGetUuid(resourceName string, initialUuid *string) resource.TestCheck
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
-		uuid := rs.Primary.Attributes["uuid"]
-		initialUuid = &uuid
+		uuidState := rs.Primary.Attributes["uuid"]
+		initialUuid = &uuidState
+		_, err := uuid.Parse(*initialUuid)
+		if err != nil {
+			return fmt.Errorf("initialUuid value %q failed uuid parsing",
+				*initialUuid)
+		}
 		return nil
 	}
 }
