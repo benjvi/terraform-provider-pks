@@ -80,7 +80,7 @@ func TestAccPksCluster_update(t *testing.T) {
 	resourceName := "pks_cluster.test"
 	clusterName := "tf_acc_update_" + rString
 	hostname := clusterName + ".example.com"
-	var initialUuid string
+	var initialUuid *string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -103,7 +103,21 @@ func TestAccPksCluster_update(t *testing.T) {
 						}
 						return nil
 					},
-					testAccGetUuid(resourceName, &initialUuid),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[resourceName]
+						if !ok {
+							return fmt.Errorf("Not found: %s", resourceName)
+						}
+						uuidState := rs.Primary.Attributes["uuid"]
+						initialUuid = &uuidState
+
+						_, err := uuid.Parse(*initialUuid)
+						if err != nil {
+							return fmt.Errorf("initialUuid value %q failed uuid parsing",
+								*initialUuid)
+						}
+						return nil
+					},
 				),
 			},
 			{
@@ -113,7 +127,13 @@ func TestAccPksCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
 					resource.TestCheckResourceAttr(resourceName, "num_nodes", "2"),
 					// uuid is unchanged, means this is an in-place update
-					resource.TestCheckResourceAttr(resourceName, "uuid", initialUuid),
+					func(state *terraform.State) error {
+						uuidVal := state.RootModule().Resources[resourceName].Primary.Attributes["uuid"]
+						if uuidVal != *initialUuid {
+							return fmt.Errorf("uuid changed from %q to %q indicated an unwanted recreation", *initialUuid, uuidVal)
+						}
+						return nil
+					},
 				),
 			},
 		},
@@ -126,7 +146,7 @@ func TestAccPksCluster_CreateAfterManualDestroy(t *testing.T) {
 	resourceName := "pks_cluster.test"
 	clusterName := "tf_acc_recreate_" + rString
 	hostname := clusterName + ".example.com"
-	var initialUuid string
+	var initialUuid *string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,7 +157,21 @@ func TestAccPksCluster_CreateAfterManualDestroy(t *testing.T) {
 				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
-					testAccGetUuid(resourceName, &initialUuid),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[resourceName]
+						if !ok {
+							return fmt.Errorf("Not found: %s", resourceName)
+						}
+						uuidState := rs.Primary.Attributes["uuid"]
+						initialUuid = &uuidState
+
+						_, err := uuid.Parse(*initialUuid)
+						if err != nil {
+							return fmt.Errorf("initialUuid value %q failed uuid parsing",
+								*initialUuid)
+						}
+						return nil
+					},
 					testAccManuallyDeletePksCluster(clusterName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -147,10 +181,10 @@ func TestAccPksCluster_CreateAfterManualDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
 					func(state *terraform.State) error {
-						if initialUuid == state.RootModule().Resources[resourceName].Primary.Attributes["uuid"] {
+						if *initialUuid == state.RootModule().Resources[resourceName].Primary.Attributes["uuid"] {
 							// terraform should have noticed we deleted the cluster and triggered a recreate
 							return fmt.Errorf("uuid is unchanged even after we thought we recreated the cluster ( %s )",
-								initialUuid)
+								*initialUuid)
 						}
 						return nil
 					},
@@ -255,23 +289,6 @@ func testAccManuallyDeletePksCluster(clusterName string) resource.TestCheckFunc 
 			return err
 		}
 
-		return nil
-	}
-}
-
-func testAccGetUuid(resourceName string, initialUuid *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-		uuidState := rs.Primary.Attributes["uuid"]
-		initialUuid = &uuidState
-		_, err := uuid.Parse(*initialUuid)
-		if err != nil {
-			return fmt.Errorf("initialUuid value %q failed uuid parsing",
-				*initialUuid)
-		}
 		return nil
 	}
 }
