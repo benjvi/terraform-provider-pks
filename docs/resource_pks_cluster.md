@@ -4,7 +4,7 @@ Creates Kubernetes clusters using the PKS Cluster API.
 
 This resource waits for any actions taken on the cluster to be completed, allowing additional resources to be created that depend on completed cluster creation.
 
-__CAUTION__: Updates have not been implemented yet, so any modifications to a cluster will cause recreation!
+Will update the cluster in place if the number of worker nodes (`num_nodes`) is changed.
 
 ## Example Usage
 
