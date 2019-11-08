@@ -2,6 +2,7 @@ package pks
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -92,6 +93,16 @@ func TestAccPksCluster_update(t *testing.T) {
 					testAccCheckPksClusterExists(resourceName, clusterName),
 					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
 					resource.TestCheckResourceAttr(resourceName, "num_nodes", "1"),
+					func(state *terraform.State) error {
+						uuidVal := state.RootModule().Resources[resourceName].Primary.Attributes["uuid"]
+						_, err := uuid.Parse(uuidVal)
+						if err != nil {
+							// terraform should have noticed we deleted the cluster and triggered a recreate
+							return fmt.Errorf("uuid value %q failed uuid parsing",
+								uuidVal)
+						}
+						return nil
+					},
 					testAccGetUuid(resourceName, &initialUuid),
 				),
 			},
