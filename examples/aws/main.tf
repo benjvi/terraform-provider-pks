@@ -1,14 +1,12 @@
 provider "pks" {
-  target = var.pks_api_dns_name
-  token = var.token
   skip_ssl_validation = true
 }
 
 provider "aws" {}
 
 resource "pks_cluster" "example" {
-  name = "example1"
-  external_hostname = var.k8s_api_dns_name
+  name = var.cluster_name
+  external_hostname = "${var.cluster_name}.${var.k8s_api_dns_suffix}"
   plan = "small"
   num_nodes = 1
 }
@@ -54,18 +52,16 @@ resource "aws_route53_record" "api" {
   type = "CNAME"
 }
 
+variable "cluster_name" {
+  type = "string"
+  default = "example-tf"
+}
 
-variable "k8s_api_dns_name" {
+
+variable "k8s_api_dns_suffix" {
   type = "string"
 }
 
-variable "pks_api_dns_name" {
-  type = "string"
-}
-
-variable "token" {
-  type = "string"
-}
 
 variable "public_subnet_ids" {
   type = "list"
