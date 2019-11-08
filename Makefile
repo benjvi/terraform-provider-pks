@@ -7,10 +7,6 @@ default: build
 build: fmtcheck
 	go install
 
-gen:
-	rm -f aws/internal/keyvaluetags/*_gen.go
-	go generate ./...
-
 test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
 

@@ -43,6 +43,10 @@ type ClusterResponse struct {
 	Parameters            ClusterParameters `json:"parameters"`
 }
 
+type UpdateClusterParameters struct {
+	KubernetesWorkerInstances int64 `json:"kubernetes_worker_instances,omitempty"`
+}
+
 func ClientLogin(httpClient *http.Client, hostname, clientId, clientSecret string) (string, error) {
 	/*
 		Replicating this working curl command:
@@ -108,6 +112,26 @@ func CreateCluster(client *Client, clusterReq ClusterRequest) error {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(clusterReq)
 	req, _ := http.NewRequest("POST", "https://"+client.hostname+":9021/v1/clusters", b)
+	req.Header["Authorization"] = []string{"Bearer " + client.token}
+	req.Header["Content-Type"] = []string{"application/json; charset=utf-8"}
+	req.Header["Accept"] = []string{"application/json; charset=utf-8"}
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("POST to API to create cluster failed: %q", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode > 299 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("cluster creation returned unexpected status %q with response: %q", resp.Status, body)
+	}
+	return nil
+}
+
+func UpdateCluster(client *Client, clusterName string, updateClusterReq UpdateClusterParameters) error {
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(updateClusterReq)
+	req, _ := http.NewRequest("PATCH", "https://"+client.hostname+":9021/v1/clusters/"+clusterName, b)
 	req.Header["Authorization"] = []string{"Bearer " + client.token}
 	req.Header["Content-Type"] = []string{"application/json; charset=utf-8"}
 	req.Header["Accept"] = []string{"application/json; charset=utf-8"}

@@ -9,7 +9,7 @@ func resourcePksCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourcePksClusterCreate,
 		Read:   resourcePksClusterRead,
-		// Update: resourcePksClusterUpdate,
+		Update: resourcePksClusterUpdate,
 		Delete: resourcePksClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -42,7 +42,6 @@ func resourcePksCluster() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Number of worker nodes, overriding plan-specified default",
-				ForceNew:    true,
 			},
 
 			"master_ips": {
@@ -150,19 +149,40 @@ func resourcePksClusterRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("plan", cr.PlanName)
 	d.Set("num_nodes", cr.Parameters.KubernetesWorkerInstances)
 	d.Set("uuid", cr.Uuid)
-	d.Set("last_action", cr.Name)
-	d.Set("last_action_state", cr.Name)
-	d.Set("last_action_description", cr.Name)
+	d.Set("last_action", cr.LastAction)
+	d.Set("last_action_state", cr.LastActionState)
+	d.Set("last_action_description", cr.LastActionDescription)
 	d.Set("master_ips", cr.KubernetesMasterIps)
 
 	return nil
 }
 
-/*func resourcePksClusterUpdate(d *schema.ResourceData, m interface{}) error {
-	// TODO
+func resourcePksClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	pksClient := m.(*Client)
+	name := d.Id()
+
+	updateClusterReq := UpdateClusterParameters{}
+
+	updatesFound := false
+	if numNodes, ok := d.GetOk("num_nodes"); ok {
+		updateClusterReq.KubernetesWorkerInstances = int64(numNodes.(int))
+		updatesFound = true
+	}
+
+	if updatesFound {
+		err := UpdateCluster(pksClient, name, updateClusterReq)
+		if err != nil {
+			return err
+		}
+
+		err = WaitForClusterAction(pksClient, name, "UPDATE")
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourcePksClusterRead(d, m)
-}*/
+}
 
 func resourcePksClusterDelete(d *schema.ResourceData, m interface{}) error {
 	pksClient := m.(*Client)

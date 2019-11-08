@@ -50,7 +50,7 @@ func TestAccPksCluster_allFields(t *testing.T) {
 		CheckDestroy: testAccCheckPksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname),
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
 					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
@@ -63,11 +63,46 @@ func TestAccPksCluster_allFields(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname),
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
 					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
 					resource.TestCheckResourceAttr(resourceName, "num_nodes", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPksCluster_update(t *testing.T) {
+	rString := acctest.RandString(6)
+	resourceName := "pks_cluster.test"
+	clusterName := "tf_acc_update_" + rString
+	hostname := clusterName + ".example.com"
+	var initialUuid string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPksClusterExists(resourceName, clusterName),
+					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
+					resource.TestCheckResourceAttr(resourceName, "num_nodes", "1"),
+					testAccGetUuid(resourceName, &initialUuid),
+				),
+			},
+			{
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPksClusterExists(resourceName, clusterName),
+					resource.TestCheckResourceAttr(resourceName, "plan", "small"),
+					resource.TestCheckResourceAttr(resourceName, "num_nodes", "2"),
+					// uuid is unchanged, means this is an in-place update
+					resource.TestCheckResourceAttr(resourceName, "uuid", initialUuid),
 				),
 			},
 		},
@@ -88,15 +123,16 @@ func TestAccPksCluster_CreateAfterManualDestroy(t *testing.T) {
 		CheckDestroy: testAccCheckPksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname),
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
-					testAccManuallyDeletePksCluster(resourceName, clusterName, &initialUuid),
+					testAccGetUuid(resourceName, &initialUuid),
+					testAccManuallyDeletePksCluster(clusterName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname),
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
 					func(state *terraform.State) error {
@@ -126,7 +162,7 @@ func TestAccPksCluster_import(t *testing.T) {
 		CheckDestroy: testAccCheckPksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname),
+				Config: testAccPksClusterAllFieldsConfig(clusterName, hostname, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPksClusterExists(resourceName, clusterName),
 				),
@@ -195,15 +231,8 @@ func testAccCheckPksClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccManuallyDeletePksCluster(resourceName, clusterName string, initialUuid *string) resource.TestCheckFunc {
+func testAccManuallyDeletePksCluster(clusterName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-		uuid := rs.Primary.Attributes["uuid"]
-		initialUuid = &uuid
-
 		client := testAccProvider.Meta().(*Client)
 		err := DeleteCluster(client, clusterName)
 		if err != nil {
@@ -219,6 +248,18 @@ func testAccManuallyDeletePksCluster(resourceName, clusterName string, initialUu
 	}
 }
 
+func testAccGetUuid(resourceName string, initialUuid *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+		uuid := rs.Primary.Attributes["uuid"]
+		initialUuid = &uuid
+		return nil
+	}
+}
+
 func testAccPksClusterBasicConfig(name, hostname string) string {
 	return fmt.Sprintf(`
 resource "pks_cluster" "test" {
@@ -229,13 +270,13 @@ resource "pks_cluster" "test" {
 `, name, hostname)
 }
 
-func testAccPksClusterAllFieldsConfig(name, hostname string) string {
+func testAccPksClusterAllFieldsConfig(name, hostname string, nodes int) string {
 	return fmt.Sprintf(`
 resource "pks_cluster" "test" {
   name = "%s"
   external_hostname = "%s"
   plan = "small"
-  num_nodes = 1
+  num_nodes = %d
 }
-`, name, hostname)
+`, name, hostname, nodes)
 }
