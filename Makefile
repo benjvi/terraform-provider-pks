@@ -4,6 +4,10 @@ PKG_NAME=pks
 
 default: build
 
+# bin generates the releaseable binaries for Terraform
+bin: fmtcheck
+	@TF_RELEASE=1 sh -c "'$(CURDIR)/scripts/build.sh'"
+
 build: fmtcheck
 	go install
 
