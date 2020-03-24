@@ -1,6 +1,6 @@
 
 provider "pks" {
-  target = "${var.pks_api_dns_name}"
+  hostname = "${var.pks_api_dns_name}"
   token = "${var.token}"
   skip_ssl_validation = true
 }
