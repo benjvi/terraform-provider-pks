@@ -8,7 +8,7 @@ For provisioning Kubernetes clusters through the PKS API. The provider needs to 
 # Configure the PKS provider.
 provider "pks" {
   token  = "${var.token}"
-  target = "${var.target}"
+  hostname = "${var.target}"
 }
 
 # Create a cluster
@@ -27,7 +27,7 @@ One of either `token`, or `client_id` + `client_secret` must be specified to aut
 
 The following additional arguments are supported:
 
-* `target` - (Required) Hostname of the PKS API to connect to. Can also be passed to the provider with the `PKS_TARGET` shell environment variable. 
+* `hostname` - (Required) Hostname of the PKS API to connect to. Can also be passed to the provider with the `PKS_HOSTNAME` shell environment variable. 
 * `skip_ssl_validation` - (Optional) Default `false`. Can also be passed to the provider with the `PKS_SKIP_SSL_VALIDATION` shell environment variable. 
 * `max_wait_min` - (Optional) Length of time (in minutes) that the provider will wait for PKS operations to complete. Default: 20. Can also be passed to the provider with the `PKS_MAX_WAIT_MIN` shell environment variable. 
 * `wait_poll_interval_sec` - (Optional) Frequency of polling (in seconds) while waiting for PKS operations to complete. Default: 10. Can also be passed to the provider with the `PKS_WAIT_POLL_INTERVAL_SEC` shell environment variable. 
