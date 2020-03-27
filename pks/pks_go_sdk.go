@@ -22,6 +22,7 @@ type ClusterRequest struct {
 	Name       string            `json:"name"`
 	PlanName   string            `json:"plan_name"`
 	Parameters ClusterParameters `json:"parameters"`
+	NetworkProfileName ClusterParameters `json:"network_profile_name"`
 }
 
 type ClusterParameters struct {
@@ -41,6 +42,7 @@ type ClusterResponse struct {
 	PksVersion            string            `json:"pks_version"`
 	KubernetesMasterIps   []string          `json:"kubernetes_master_ips"`
 	Parameters            ClusterParameters `json:"parameters"`
+	NetworkProfileName    string `json:"network_profile_name"`
 }
 
 type UpdateClusterParameters struct {

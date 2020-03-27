@@ -86,6 +86,13 @@ func resourcePksCluster() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
+
+			"net_profile_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Network profile used to create cluster",
+				ForceNew:    true,
+			},
 		},
 	}
 }
@@ -107,6 +114,7 @@ func resourcePksClusterCreate(d *schema.ResourceData, m interface{}) error {
 		Parameters: params,
 		Name:       name,
 		PlanName:   d.Get("plan").(string),
+		NetworkProfileName:   d.Get("net_profile_name").(string),
 	}
 
 	log.Printf("[DEBUG] PKS cluster create request configuration: %#v", clusterReq)
@@ -153,6 +161,7 @@ func resourcePksClusterRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("last_action_state", cr.LastActionState)
 	d.Set("last_action_description", cr.LastActionDescription)
 	d.Set("master_ips", cr.KubernetesMasterIps)
+	d.Set("net_profile_name", cr.NetworkProfileName)
 
 	return nil
 }
